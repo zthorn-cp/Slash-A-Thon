@@ -56,7 +56,7 @@ namespace Game {
             this.canvas.style.width = width + "px";
             this.canvas.style.height = height + "px";
             this.canvas.style.border = "solid 1px gray";
-
+            this.canvas.style.backgroundImage = "url(/content/img/backdrops/sand.png)";
             
 
             this.context = this.canvas.getContext("2d");
@@ -66,21 +66,22 @@ namespace Game {
         }
 
         drawBackdrop(): void {
-            this.context.drawImage(
-                this.backdrop.image,
-                0,
-                0,
-                this.backdrop.width,
-                this.backdrop.height,
-                0,
-                0,
-                this.backdrop.width,
-                this.backdrop.height
-            );
+//            this.context.drawImage(
+//                this.backdrop.image,
+//                0,
+//                0,
+//                this.backdrop.width,
+//                this.backdrop.height,
+//                0,
+//                0,
+//                this.backdrop.width,
+//                this.backdrop.height
+//            );
         }
 
         drawObject(obj:IGameObject): void {
 
+//            let bounds = new Bounds(new Vector(obj.position.x - 10, obj.position.y - 10), obj.width + 20, obj.height + 20);
             let bounds = obj.getBounds();
 
             const actor = obj as IActor;
@@ -90,12 +91,19 @@ namespace Game {
             }
 
             // re-render background
-            this.context.drawImage(
-                this.backdrop.image,
-                this.backdrop.width % bounds.left,
-                this.backdrop.height % bounds.top,
-                bounds.width,
-                bounds.height,
+//            this.context.drawImage(
+//                this.backdrop.image,
+//                this.backdrop.width % bounds.left,
+//                this.backdrop.height % bounds.top,
+//                bounds.width,
+//                bounds.height,
+//                bounds.left,
+//                bounds.top,
+//                bounds.width,
+//                bounds.height
+//            );
+
+            this.context.clearRect(
                 bounds.left,
                 bounds.top,
                 bounds.width,

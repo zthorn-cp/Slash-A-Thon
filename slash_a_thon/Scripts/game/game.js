@@ -59,11 +59,13 @@ var Game;
             return ((this.left < this.right) && (this.left > other.right) && (this.top < other.bottom) && (this.bottom > other.top));
         };
         Bounds.expand = function (b1, b2) {
-            var x = (b1.left < b2.left) ? b1.left : b2.left;
-            var y = (b1.top < b2.top) ? b1.top : b2.top;
-            var width = (b1.width > b2.width) ? b2.width : b1.width;
-            var height = (b1.height > b2.height) ? b2.height : b1.height;
-            return new Bounds(new Game.Vector(x, y), width, height);
+            var left = (b1.left < b2.left) ? b1.left : b2.left;
+            var top = (b1.top < b2.top) ? b1.top : b2.top;
+            var right = (b1.right > b2.right) ? b1.right : b2.right;
+            var bottom = (b1.bottom > b2.bottom) ? b1.bottom : b2.bottom;
+            var width = right - left;
+            var height = bottom - top;
+            return new Bounds(new Game.Vector(left, top), width, height);
         };
         return Bounds;
     }());
@@ -189,21 +191,44 @@ var Game;
             this.canvas.style.width = width + "px";
             this.canvas.style.height = height + "px";
             this.canvas.style.border = "solid 1px gray";
+            this.canvas.style.backgroundImage = "url(/content/img/backdrops/sand.png)";
             this.context = this.canvas.getContext("2d");
             this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
             document.body.appendChild(this.canvas);
         };
         GameBoard.prototype.drawBackdrop = function () {
-            this.context.drawImage(this.backdrop.image, 0, 0, this.backdrop.width, this.backdrop.height, 0, 0, this.backdrop.width, this.backdrop.height);
+            //            this.context.drawImage(
+            //                this.backdrop.image,
+            //                0,
+            //                0,
+            //                this.backdrop.width,
+            //                this.backdrop.height,
+            //                0,
+            //                0,
+            //                this.backdrop.width,
+            //                this.backdrop.height
+            //            );
         };
         GameBoard.prototype.drawObject = function (obj) {
+            //            let bounds = new Bounds(new Vector(obj.position.x - 10, obj.position.y - 10), obj.width + 20, obj.height + 20);
             var bounds = obj.getBounds();
             var actor = obj;
             if (actor.getLastBounds !== undefined) {
                 bounds = Game.Bounds.expand(bounds, actor.getLastBounds());
             }
             // re-render background
-            this.context.drawImage(this.backdrop.image, this.backdrop.width % bounds.left, this.backdrop.height % bounds.top, bounds.width, bounds.height, bounds.left, bounds.top, bounds.width, bounds.height);
+            //            this.context.drawImage(
+            //                this.backdrop.image,
+            //                this.backdrop.width % bounds.left,
+            //                this.backdrop.height % bounds.top,
+            //                bounds.width,
+            //                bounds.height,
+            //                bounds.left,
+            //                bounds.top,
+            //                bounds.width,
+            //                bounds.height
+            //            );
+            this.context.clearRect(bounds.left, bounds.top, bounds.width, bounds.height);
             // draw the sprite
             this.context.drawImage(obj.sprite.image, obj.sprite.offsetX, obj.sprite.offsetY, obj.sprite.width, obj.sprite.height, obj.position.x, obj.position.y, obj.sprite.width, obj.sprite.height);
         };
@@ -287,9 +312,9 @@ var Game;
     var mapLoader;
     function loadImages() {
         console.log("Loading Images...");
-        Game.ImageLoader.instance.loadImage("content/img/backdrops/sand.png", function () { });
-        Game.ImageLoader.instance.loadImage("content/img/sprites/player.png", function () { });
-        Game.ImageLoader.instance.loadImage("content/img/sprites/block_basic.png", function () { });
+        Game.ImageLoader.instance.loadImage("/content/img/backdrops/sand.png", function () { });
+        Game.ImageLoader.instance.loadImage("/content/img/sprites/player.png", function () { });
+        Game.ImageLoader.instance.loadImage("/content/img/sprites/block_basic.png", function () { });
         Game.ImageLoader.instance.onReady = loadMap;
     }
     function loadMap() {
@@ -326,6 +351,7 @@ var Game;
         var spawnPoint = gameBoard.map.playerSpawnPoints[spawnPointIndex];
         var player = new Game.Player();
         player.position = spawnPoint;
+        player.lastPosition = spawnPoint;
         return player;
     }
     function gameLoop(time) {

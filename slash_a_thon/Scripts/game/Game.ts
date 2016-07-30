@@ -10,9 +10,9 @@ namespace Game {
         console.log("Loading Images...");
 
         
-        ImageLoader.instance.loadImage("content/img/backdrops/sand.png", () => { });
-        ImageLoader.instance.loadImage("content/img/sprites/player.png", () => { });
-        ImageLoader.instance.loadImage("content/img/sprites/block_basic.png", () => { });
+        ImageLoader.instance.loadImage("/content/img/backdrops/sand.png", () => { });
+        ImageLoader.instance.loadImage("/content/img/sprites/player.png", () => { });
+        ImageLoader.instance.loadImage("/content/img/sprites/block_basic.png", () => { });
 
         ImageLoader.instance.onReady=loadMap;
     }
@@ -63,6 +63,7 @@ namespace Game {
 
         const player = new Player();
         player.position = spawnPoint;
+        player.lastPosition = spawnPoint;
 
         return player;
     }

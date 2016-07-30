@@ -22,11 +22,14 @@
         }
 
         static expand(b1: Bounds, b2: Bounds): Bounds {
-            const x = (b1.left < b2.left) ? b1.left : b2.left;
-            const y = (b1.top < b2.top) ? b1.top : b2.top;
-            const width = (b1.width > b2.width) ? b2.width : b1.width;
-            const height = (b1.height > b2.height) ? b2.height : b1.height;
-            return new Bounds(new Vector(x, y), width, height);
+            const left = (b1.left < b2.left) ? b1.left : b2.left;
+            const top = (b1.top < b2.top) ? b1.top : b2.top;
+            const right = (b1.right > b2.right) ? b1.right : b2.right;
+            const bottom = (b1.bottom > b2.bottom) ? b1.bottom : b2.bottom;
+
+            const width = right - left;
+            const height = bottom - top;
+            return new Bounds(new Vector(left, top), width, height);
         }
     }
 
