@@ -18,7 +18,7 @@
         }
 
         isInside(other: Bounds): boolean {
-            return ((this.left < this.right) && (this.left > other.right) && (this.top < other.bottom) && (this.bottom > other.top));
+            return ((this.left < other.right) && (this.right > other.left) && (this.top < other.bottom) && (this.bottom > other.top));
         }
 
         static expand(b1: Bounds, b2: Bounds): Bounds {

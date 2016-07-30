@@ -22,7 +22,9 @@
              return false;
         }
 
-        collideWith(other: IGameObject): boolean { return true; }
+        collideWith(other: IGameObject): boolean {
+             return other.isSolid;
+        }
 
         getBounds(): Bounds {
             return new Bounds(this.position, this.width, this.height);

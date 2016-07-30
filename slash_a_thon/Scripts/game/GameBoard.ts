@@ -153,7 +153,10 @@ namespace Game {
                     const secondBounds = secondItem.getBounds();
 
                     if (firstBounds.isInside(secondBounds)) {
-                        firstItem.collideWith(secondItem);
+                        if (firstItem.collideWith(secondItem) && secondItem.collideWith(firstItem)) {
+                            didUpdate.push(firstItem);
+                            didUpdate.push(secondItem);
+                        }
                     }
                 }
             }
@@ -172,6 +175,7 @@ namespace Game {
 
             return this.isRunning;
         }
+        
 
         private handleKeyDown(ev: KeyboardEvent) {
             console.debug(`KeyDown: ${ev.key}`);

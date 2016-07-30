@@ -5,6 +5,62 @@ var __extends = (this && this.__extends) || function (d, b) {
 };
 var Game;
 (function (Game) {
+    var Actor = (function () {
+        function Actor() {
+            this.speed = 300;
+            this.direction = Game.Direction.None;
+            this.isSolid = true;
+            this.position = Game.Vector.empty;
+            this.lastPosition = Game.Vector.empty;
+            this.width = 100;
+            this.height = 100;
+            this.onReady = function (obj) { return void {}; };
+        }
+        Actor.prototype.move = function (ticks, dir) {
+            var distance = this.speed * (ticks / 1000);
+            var vector = Game.Vector.getVector(dir);
+            vector = Game.Vector.times(distance, vector);
+            this.position = Game.Vector.plus(this.position, vector);
+        };
+        Actor.prototype.update = function (ticks, board) {
+            this.lastPosition = this.position;
+            if (this.direction !== Game.Direction.None) {
+                this.move(ticks, this.direction);
+                return true;
+            }
+            return false;
+        };
+        Actor.prototype.collideWith = function (other) {
+            if (other.isSolid) {
+                var myBounds = this.getBounds();
+                var otherBounds = other.getBounds();
+                if (myBounds.top < otherBounds.bottom && myBounds.bottom > otherBounds.bottom) {
+                    this.position.y = otherBounds.bottom + 1;
+                }
+                else if (myBounds.bottom > otherBounds.top && myBounds.top < otherBounds.top) {
+                    this.position.y = otherBounds.top - this.height - 1;
+                }
+                if (myBounds.left < otherBounds.right && myBounds.right > otherBounds.right) {
+                    this.position.x = otherBounds.right + 1;
+                }
+                else if (myBounds.right > otherBounds.left && myBounds.left < otherBounds.left) {
+                    this.position.x = otherBounds.left - this.width - 1;
+                }
+                this.direction = Game.Direction.None;
+                return true;
+            }
+            return false;
+        };
+        Actor.prototype.getBounds = function () {
+            return new Game.Bounds(this.position, this.width, this.height);
+        };
+        Actor.prototype.getLastBounds = function () { return new Game.Bounds(this.lastPosition, this.width, this.height); };
+        return Actor;
+    }());
+    Game.Actor = Actor;
+})(Game || (Game = {}));
+var Game;
+(function (Game) {
     var Scenery = (function () {
         function Scenery() {
             this.isSolid = true;
@@ -16,7 +72,9 @@ var Game;
         Scenery.prototype.update = function (ticks, board) {
             return false;
         };
-        Scenery.prototype.collideWith = function (other) { return true; };
+        Scenery.prototype.collideWith = function (other) {
+            return other.isSolid;
+        };
         Scenery.prototype.getBounds = function () {
             return new Game.Bounds(this.position, this.width, this.height);
         };
@@ -56,7 +114,7 @@ var Game;
             this.height = height;
         }
         Bounds.prototype.isInside = function (other) {
-            return ((this.left < this.right) && (this.left > other.right) && (this.top < other.bottom) && (this.bottom > other.top));
+            return ((this.left < other.right) && (this.right > other.left) && (this.top < other.bottom) && (this.bottom > other.top));
         };
         Bounds.expand = function (b1, b2) {
             var left = (b1.left < b2.left) ? b1.left : b2.left;
@@ -86,18 +144,12 @@ var Game;
 })(Game || (Game = {}));
 var Game;
 (function (Game) {
-    var Creature = (function () {
+    var Creature = (function (_super) {
+        __extends(Creature, _super);
         function Creature() {
+            _super.apply(this, arguments);
             this.health = 5;
             this.isAlive = true;
-            this.speed = 300;
-            this.direction = Game.Direction.None;
-            this.isSolid = true;
-            this.position = Game.Vector.empty;
-            this.lastPosition = Game.Vector.empty;
-            this.width = 100;
-            this.height = 100;
-            this.onReady = function (obj) { return void {}; };
         }
         Creature.prototype.takeDamage = function (damage) {
             this.health -= damage;
@@ -107,19 +159,12 @@ var Game;
                 this.flagedForRemoval = true;
             }
         };
-        Creature.prototype.move = function (ticks, dir) {
-            this.lastPosition = this.position;
-            var distance = this.speed * (ticks / 1000);
-            var vector = Game.Vector.getVector(dir);
-            vector = Game.Vector.times(distance, vector);
-            this.position = Game.Vector.plus(this.position, vector);
+        Creature.prototype.update = function (ticks, board) {
+            this.direction = this.getNextDirection();
+            return _super.prototype.update.call(this, ticks, board);
         };
-        Creature.prototype.getBounds = function () {
-            return new Game.Bounds(this.position, this.width, this.height);
-        };
-        Creature.prototype.getLastBounds = function () { return new Game.Bounds(this.lastPosition, this.width, this.height); };
         return Creature;
-    }());
+    }(Game.Actor));
     Game.Creature = Creature;
 })(Game || (Game = {})); // namespace Game
 var Game;
@@ -255,7 +300,10 @@ var Game;
                     var secondItem = this.objects[secondIndex];
                     var secondBounds = secondItem.getBounds();
                     if (firstBounds.isInside(secondBounds)) {
-                        firstItem.collideWith(secondItem);
+                        if (firstItem.collideWith(secondItem) && secondItem.collideWith(firstItem)) {
+                            didUpdate.push(firstItem);
+                            didUpdate.push(secondItem);
+                        }
                     }
                 }
             }
@@ -527,14 +575,15 @@ var Game;
             };
             this.affinity = Game.Element.Air;
         }
-        Player.prototype.update = function (ticks) {
-            if (this.direction !== Game.Direction.None) {
-                this.move(ticks, this.direction);
-                return true;
+        Player.prototype.collideWith = function (other) {
+            var superResult = _super.prototype.collideWith.call(this, other);
+            if (superResult) {
             }
-            return false;
+            return superResult;
         };
-        Player.prototype.collideWith = function (other) { throw new Error("Not implemented"); };
+        Player.prototype.getNextDirection = function () {
+            return this.direction;
+        };
         return Player;
     }(Game.Creature));
     Game.Player = Player;

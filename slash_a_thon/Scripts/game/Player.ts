@@ -15,15 +15,19 @@
             this.affinity = Element.Air;
         }
 
-        update(ticks: number): boolean {
-            if (this.direction !== Direction.None) {
-                this.move(ticks, this.direction);
-                return true;
+        
+
+        collideWith(other: IGameObject): boolean {
+            const superResult = super.collideWith(other);
+            if (superResult) {
+                
             }
-            return false;
+            return superResult;
         }
 
-        collideWith(other: IGameObject): boolean { throw new Error("Not implemented"); }
+        protected getNextDirection(): Direction {
+            return this.direction;
+        }
     }
 
 }

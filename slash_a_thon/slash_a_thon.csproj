@@ -250,6 +250,7 @@
     <None Include="Project_Readme.html" />
   </ItemGroup>
   <ItemGroup>
+    <TypeScriptCompile Include="Scripts\game\Actor.ts" />
     <TypeScriptCompile Include="Scripts\game\Block.ts" />
     <TypeScriptCompile Include="Scripts\game\Bounds.ts" />
     <TypeScriptCompile Include="Scripts\game\CellType.ts" />
