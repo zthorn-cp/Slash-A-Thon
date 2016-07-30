@@ -13,7 +13,22 @@ namespace Game {
         private cellMap = {
             ' ': CellType.None,
             '#': CellType.Block,
-            '$':CellType.SpawnPoint
+            '$': CellType.PlayerSpawnPoint,
+            '@': CellType.MonsterSpawnPoint,
+            '~': CellType.Water,
+            '^': CellType.Lava,
+            '%': CellType.Canyon,
+
+            // reserved for future use
+            '!': CellType.None,
+            '&': CellType.None,
+            '*': CellType.None,
+            '(': CellType.None,
+            ')': CellType.None,
+            '_': CellType.None,
+            '-': CellType.None,
+            '+': CellType.None,
+            '=': CellType.None
         };
 
         cellWidth = 100;
@@ -59,10 +74,19 @@ namespace Game {
 
                     map.cells[x][y] = cellType;
 
-                    const obj = this.typeMap.getObject(cellType);
-                    if (obj !== undefined) {
-                        obj.position = new Vector(x * this.cellWidth, y * this.cellHeight); 
-                        gameBoard.objects.push(obj);
+                    if (cellType >= 10) {
+
+                        const obj = this.typeMap.getObject(cellType);
+                        if (obj !== undefined) {
+                            obj.position = new Vector(x * this.cellWidth, y * this.cellHeight);
+                            gameBoard.objects.push(obj);
+                        }
+                    }
+                    else if (cellType === CellType.PlayerSpawnPoint) {
+                        map.playerSpawnPoints.push(new Vector(x * this.cellWidth, y * this.cellHeight));
+                    }
+                    else if (cellType === CellType.MonsterSpawnPoint) {
+                        map.monsterSpawnPoints.push(new Vector(x * this.cellWidth, y * this.cellHeight));
                     }
                 }
             }

@@ -9,12 +9,12 @@ namespace Game {
         lastTime: number;
         backdrop: Sprite;
         map:Map;
-
+        player: Player;
         
         drawBackdrop():void;
         update(ticks: number): boolean;
         objects: Array<IGameObject>;
-        drawSprite(sprite: Sprite, position:Vector): void;
+        drawObject(obj: IGameObject): void;
     }
 
 
@@ -28,6 +28,7 @@ namespace Game {
         lastTime: number = 0;
         backdrop: Sprite;
         map: Map;
+        player:Player;
 
         static PIXEL_RATIO = (function () {
             //const ctx = document.createElement("canvas").getContext("2d");
@@ -39,6 +40,10 @@ namespace Game {
 
         constructor(public width: number, public height: number) {
             this.createScaledCanvas(width, height);
+
+            // handle interaction events
+            window.onkeydown = (ev: KeyboardEvent) =>this.handleKeyDown(ev);
+            window.onkeyup = (ev:KeyboardEvent) => this.handleKeyUp(ev);
         }
 
 
@@ -51,6 +56,8 @@ namespace Game {
             this.canvas.style.width = width + "px";
             this.canvas.style.height = height + "px";
             this.canvas.style.border = "solid 1px gray";
+
+            
 
             this.context = this.canvas.getContext("2d");
             this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
@@ -72,54 +79,115 @@ namespace Game {
             );
         }
 
-        drawSprite(sprite: Sprite, position:Vector): void {
-            console.debug(`drawing sprite ${sprite.image.src} at (${position.x},${position.y})`);
+        drawObject(obj:IGameObject): void {
+
+            let bounds = obj.getBounds();
+
+            const actor = obj as IActor;
+
+            if (actor.getLastBounds !== undefined) {
+                bounds = Bounds.expand(bounds, actor.getLastBounds());
+            }
 
             // re-render background
             this.context.drawImage(
                 this.backdrop.image,
-                this.backdrop.width % position.x,
-                this.backdrop.height % position.y,
-                sprite.width,
-                sprite.height,
-                position.x,
-                position.y,
-                sprite.width,
-                sprite.height
+                this.backdrop.width % bounds.left,
+                this.backdrop.height % bounds.top,
+                bounds.width,
+                bounds.height,
+                bounds.left,
+                bounds.top,
+                bounds.width,
+                bounds.height
             );
 
             // draw the sprite
             this.context.drawImage(
-                sprite.image,
-                sprite.offsetX,
-                sprite.offsetY,
-                sprite.width,
-                sprite.height,
-                position.x,
-                position.y,
-                sprite.width,
-                sprite.height
+                obj.sprite.image,
+                obj.sprite.offsetX,
+                obj.sprite.offsetY,
+                obj.sprite.width,
+                obj.sprite.height,
+                obj.position.x,
+                obj.position.y,
+                obj.sprite.width,
+                obj.sprite.height
             );
         }
 
         update(time: number): boolean {
             const didUpdate = new Array<IGameObject>();
+            const flagged = new Array<IGameObject>();
             const ticks = time - this.lastTime;
             this.lastTime = time;
 
             console.debug(`Running with interval ${ticks}`);
 
             for (let object of this.objects) {
-                if (object.update(ticks)) {
+                if (object.update(ticks, this)) {
                     didUpdate.push(object);
+                }
+
+                if (object.flagedForRemoval) {
+                    flagged.push(object);
                 }
             }
 
+
+            // check for collisions
+            for (let firstIndex = 0; firstIndex < this.objects.length; firstIndex++) {
+                const firstItem = this.objects[firstIndex];
+                const firstBounds = firstItem.getBounds();
+
+                for (let secondIndex = firstIndex + 1; secondIndex < this.objects.length; secondIndex++) {
+                    const secondItem = this.objects[secondIndex];
+                    const secondBounds = secondItem.getBounds();
+
+                    if (firstBounds.isInside(secondBounds)) {
+                        firstItem.collideWith(secondItem);
+                    }
+                }
+            }
+
+            // redraw everything that updated
             for (let object of didUpdate) {
-                this.drawSprite(object.sprite, object.position);
+                this.drawObject(object);
+            }
+
+            for (let object of flagged) {
+                const index = this.objects.indexOf(object, 0);
+                if (index > -1) {
+                    this.objects.splice(index, 1);
+                }
             }
 
             return this.isRunning;
+        }
+
+        private handleKeyDown(ev: KeyboardEvent) {
+            console.debug(`KeyDown: ${ev.key}`);
+
+            switch (ev.key) {
+                case "ArrowUp":
+                    this.player.direction = Direction.Up;
+                    break;
+                case "ArrowDown":
+                    this.player.direction = Direction.Down;
+                    break;
+                case "ArrowLeft":
+                    this.player.direction = Direction.Left;
+                    break;
+                case "ArrowRight":
+                    this.player.direction = Direction.Right;
+                    break;
+            }
+        }
+
+        private handleKeyUp(ev: KeyboardEvent) {
+            console.debug(`KeyUp: ${ev.key}`);
+
+            this.player.direction = Direction.None;
         }
     }
 } // namespace Game

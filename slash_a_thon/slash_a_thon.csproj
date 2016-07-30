@@ -251,15 +251,21 @@
   </ItemGroup>
   <ItemGroup>
     <TypeScriptCompile Include="Scripts\game\Block.ts" />
+    <TypeScriptCompile Include="Scripts\game\Bounds.ts" />
     <TypeScriptCompile Include="Scripts\game\CellType.ts" />
-    <TypeScriptCompile Include="Scripts\game\Core.ts" />
+    <TypeScriptCompile Include="Scripts\game\Creature.ts" />
+    <TypeScriptCompile Include="Scripts\game\Direction.ts" />
     <TypeScriptCompile Include="Scripts\game\Element.ts" />
     <TypeScriptCompile Include="Scripts\game\Game.ts" />
     <TypeScriptCompile Include="Scripts\game\GameBoard.ts" />
+    <TypeScriptCompile Include="Scripts\game\IActor.ts" />
     <TypeScriptCompile Include="Scripts\game\IGameObject.ts" />
+    <TypeScriptCompile Include="Scripts\game\ILiving.ts" />
     <TypeScriptCompile Include="Scripts\game\Item.ts" />
     <TypeScriptCompile Include="Scripts\game\Map.ts" />
     <TypeScriptCompile Include="Scripts\game\MapLoader.ts" />
+    <TypeScriptCompile Include="Scripts\game\Player.ts" />
+    <TypeScriptCompile Include="Scripts\game\Scenery.ts" />
     <TypeScriptCompile Include="Scripts\game\Sprite.ts" />
     <TypeScriptCompile Include="Scripts\game\ImageLoader.ts" />
     <TypeScriptCompile Include="Scripts\game\tests\SpriteTests.ts" />

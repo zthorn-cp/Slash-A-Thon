@@ -15,7 +15,28 @@
             const div = (mag === 0) ? Infinity : 1.0 / mag;
             return Vector.times(div, v);
         }
-        
+
+        static empty: Vector = new Vector(0,0);
+        static up: Vector = new Vector(0, -1);
+        static down: Vector = new Vector(0, 1);
+        static left: Vector = new Vector(-1, 0);
+        static right: Vector = new Vector(1, 0);
+
+        static getVector(dir: Direction): Vector {
+            switch (dir) {
+                case Direction.None:
+                    return Vector.empty;
+                case Direction.Up:
+                    return Vector.up;
+                case Direction.Down:
+                    return Vector.down;
+                case Direction.Left:
+                    return Vector.left;
+                case Direction.Right:
+                    return Vector.right;
+            }
+            return undefined;
+        }
     }
 
 } // namespace Game

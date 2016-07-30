@@ -9,8 +9,10 @@ namespace Game {
     function loadImages() {
         console.log("Loading Images...");
 
-        ImageLoader.instance.loadImage("content/img/sprites/block_basic.png", () => { });
+        
         ImageLoader.instance.loadImage("content/img/backdrops/sand.png", () => { });
+        ImageLoader.instance.loadImage("content/img/sprites/player.png", () => { });
+        ImageLoader.instance.loadImage("content/img/sprites/block_basic.png", () => { });
 
         ImageLoader.instance.onReady=loadMap;
     }
@@ -26,6 +28,11 @@ namespace Game {
     }
 
     function onMapLoaded(map: Map) {
+
+        const player = getPlayer();
+        gameBoard.player = player;
+        gameBoard.objects.push(player);
+
         initialDrawing();
     }
 
@@ -41,11 +48,23 @@ namespace Game {
         gameBoard.drawBackdrop();
 
         for (let object of gameBoard.objects) {
-            gameBoard.drawSprite(object.sprite, object.position);
+            gameBoard.drawObject(object);
         }
 
         gameBoard.isRunning = true;
         window.requestAnimationFrame(gameLoop);
+    }
+
+
+    function getPlayer() :Player{
+        const spawnPointCount = gameBoard.map.playerSpawnPoints.length;
+        const spawnPointIndex = Math.floor(Math.random() * spawnPointCount);
+        const spawnPoint = gameBoard.map.playerSpawnPoints[spawnPointIndex];
+
+        const player = new Player();
+        player.position = spawnPoint;
+
+        return player;
     }
 
     function gameLoop(time: number) {
