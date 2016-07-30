@@ -7,9 +7,11 @@ namespace Game {
     {
         constructor() {
             this.sprite = new Sprite("content/img/sprites/block_basic.png");
-            this.sprite.width = this.width;
-            this.sprite.height = this.height;
-            
+            this.sprite.onReady = (sprite: Sprite) => {
+                    this.sprite.width = this.width;
+                    this.sprite.height = this.height;
+                    this.onReady(this);
+                };
         }
 
         position: Vector;
@@ -18,6 +20,8 @@ namespace Game {
         width = 100;
         height = 100;
         affinity = Element.Earth;
+
+        onReady: (obj: IGameObject)=> void = (obj: IGameObject) => {};
 
         // blocks don't do anything, they just sit there.
         update(ticks: number): boolean { return false; }

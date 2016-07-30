@@ -20,7 +20,7 @@ var Game;
 (function (Game) {
     var Sprite = (function () {
         function Sprite(path) {
-            if (path === void 0) { path = undefined; }
+            var _this = this;
             this.width = 100;
             this.height = 100;
             this.offsetX = 0;
@@ -29,15 +29,12 @@ var Game;
             this.currentCell = 0;
             this.animationRate = 100;
             this.animationTrim = 0;
-            if (path !== undefined) {
-                this.load(path);
-            }
+            this.onReady = function (sprite) { };
+            Game.ImageLoader.instance.loadImage(path, function (img) {
+                _this.image = img;
+                _this.onReady(_this);
+            });
         }
-        Sprite.prototype.load = function (path) {
-            this.image = document.createElement("img");
-            this.image.src = path;
-            this.path = path;
-        };
         Sprite.prototype.update = function (ticks) {
             var totalTicks = ticks + this.animationTrim;
             var cellOffset = Math.floor(totalTicks / this.animationRate);
@@ -54,13 +51,18 @@ var Game;
 (function (Game) {
     var Block = (function () {
         function Block() {
+            var _this = this;
             this.isSolid = true;
             this.width = 100;
             this.height = 100;
             this.affinity = Game.Element.Earth;
+            this.onReady = function (obj) { };
             this.sprite = new Game.Sprite("content/img/sprites/block_basic.png");
-            this.sprite.width = this.width;
-            this.sprite.height = this.height;
+            this.sprite.onReady = function (sprite) {
+                _this.sprite.width = _this.width;
+                _this.sprite.height = _this.height;
+                _this.onReady(_this);
+            };
         }
         // blocks don't do anything, they just sit there.
         Block.prototype.update = function (ticks) { return false; };
@@ -109,14 +111,21 @@ var Game;
             this.height = height;
             // public members
             this.objects = new Array();
-            this.canvas = document.createElement("canvas");
-            this.canvas.width = width;
-            this.canvas.height = height;
-            this.canvas.style.border = "solid 1px gray";
-            document.body.appendChild(this.canvas);
-            this.context = this.canvas.getContext("2d");
-            this.backdrop = new Game.Sprite("/content/img/backdrops/sand.png");
+            this.lastTime = 0;
+            this.createScaledCanvas(width, height);
         }
+        GameBoard.prototype.createScaledCanvas = function (width, height) {
+            var ratio = GameBoard.PIXEL_RATIO;
+            this.canvas = document.createElement("canvas");
+            this.canvas.width = width * ratio;
+            this.canvas.height = height * ratio;
+            this.canvas.style.width = width + "px";
+            this.canvas.style.height = height + "px";
+            this.canvas.style.border = "solid 1px gray";
+            this.context = this.canvas.getContext("2d");
+            this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
+            document.body.appendChild(this.canvas);
+        };
         GameBoard.prototype.drawBackdrop = function () {
             this.context.drawImage(this.backdrop.image, 0, 0, this.backdrop.width, this.backdrop.height, 0, 0, this.backdrop.width, this.backdrop.height);
         };
@@ -144,6 +153,12 @@ var Game;
             }
             return this.isRunning;
         };
+        GameBoard.PIXEL_RATIO = (function () {
+            //const ctx = document.createElement("canvas").getContext("2d");
+            var dpr = window.devicePixelRatio || 1;
+            var bsr = 1;
+            return dpr / bsr;
+        })();
         return GameBoard;
     }());
     Game.GameBoard = GameBoard;
@@ -154,17 +169,35 @@ var Game;
 (function (Game) {
     var gameBoard;
     var mapLoader;
+    function loadImages() {
+        console.log("Loading Images...");
+        Game.ImageLoader.instance.loadImage("content/img/sprites/block_basic.png", function () { });
+        Game.ImageLoader.instance.loadImage("content/img/backdrops/sand.png", function () { });
+        Game.ImageLoader.instance.onReady = loadMap;
+    }
+    function loadMap() {
+        console.log("Loading Map...");
+        var typeMap = new Game.TypeMap();
+        typeMap.setMapping(Game.CellType.Block, Game.Block);
+        mapLoader = new Game.MapLoader(typeMap);
+        mapLoader.loadMap("/scripts/game/maps/level1.json", gameBoard, onMapLoaded);
+    }
     function onMapLoaded(map) {
         initialDrawing();
     }
     function initialDrawing() {
         // initial draw
         console.debug("Initial drawing");
+        var backdrop = new Game.Sprite("/content/img/backdrops/sand.png");
+        backdrop.height = 500;
+        backdrop.width = 1000;
+        gameBoard.backdrop = backdrop;
         gameBoard.drawBackdrop();
         for (var _i = 0, _a = gameBoard.objects; _i < _a.length; _i++) {
             var object = _a[_i];
             gameBoard.drawSprite(object.sprite, object.position);
         }
+        gameBoard.isRunning = true;
         window.requestAnimationFrame(gameLoop);
     }
     function gameLoop(time) {
@@ -177,13 +210,56 @@ var Game;
     }
     function startGame() {
         console.log("Starting Game...");
-        var typeMap = new Game.TypeMap();
-        typeMap.setMapping(Game.CellType.Block, Game.Block);
-        mapLoader = new Game.MapLoader(typeMap);
         gameBoard = new Game.GameBoard(1000, 500);
-        mapLoader.loadMap("/scripts/game/maps/level1.json", gameBoard, onMapLoaded);
+        loadImages();
     }
     Game.startGame = startGame;
+})(Game || (Game = {}));
+var Game;
+(function (Game) {
+    var ImageLoader = (function () {
+        function ImageLoader() {
+            this.images = {};
+            this.requests = {};
+            this.onReady = function () { };
+        }
+        ImageLoader.prototype.loadImage = function (path, callback) {
+            var _this = this;
+            var img;
+            if (path in this.images) {
+                img = this.images[path];
+                callback(img);
+            }
+            else if (path in this.requests) {
+                img = this.requests[path];
+                var callbackList = img["callbacks"];
+                callbackList.push(callback);
+            }
+            else {
+                console.debug("Queueing image for " + path);
+                var callbackList_1 = new Array();
+                callbackList_1.push(callback);
+                img = document.createElement("img");
+                img["callbacks"] = callbackList_1;
+                this.requests[path] = img;
+                img.addEventListener("load", function () {
+                    _this.images[path] = img;
+                    delete _this.requests[path];
+                    for (var _i = 0, callbackList_2 = callbackList_1; _i < callbackList_2.length; _i++) {
+                        var c = callbackList_2[_i];
+                        c(img);
+                    }
+                    if (Object.keys(_this.requests).length === 0) {
+                        _this.onReady();
+                    }
+                });
+                img.src = path;
+            }
+        };
+        ImageLoader.instance = new ImageLoader();
+        return ImageLoader;
+    }());
+    Game.ImageLoader = ImageLoader;
 })(Game || (Game = {}));
 /// <reference path="Element.ts" />
 var Game;

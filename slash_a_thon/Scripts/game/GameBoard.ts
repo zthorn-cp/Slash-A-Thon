@@ -25,22 +25,38 @@ namespace Game {
         // public members
         objects: Array<IGameObject> = new Array<IGameObject>();
         isRunning: boolean;
-        lastTime: number;
+        lastTime: number = 0;
         backdrop: Sprite;
-        map:Map;
+        map: Map;
+
+        static PIXEL_RATIO = (function () {
+            //const ctx = document.createElement("canvas").getContext("2d");
+            const dpr = window.devicePixelRatio || 1;
+            const bsr = 1;
+
+            return dpr / bsr;
+        })();
 
         constructor(public width: number, public height: number) {
-            this.canvas = document.createElement("canvas");
-            this.canvas.width = width;
-            this.canvas.height = height;
-            this.canvas.style.border = "solid 1px gray";
-            document.body.appendChild(this.canvas);
-            this.context = this.canvas.getContext("2d");
-
-            this.backdrop = new Sprite("/content/img/backdrops/sand.png");
-
+            this.createScaledCanvas(width, height);
         }
-        
+
+
+
+        private createScaledCanvas(width: number, height: number): void {
+            const ratio = GameBoard.PIXEL_RATIO;
+            this.canvas = document.createElement("canvas");
+            this.canvas.width = width * ratio;
+            this.canvas.height = height * ratio;
+            this.canvas.style.width = width + "px";
+            this.canvas.style.height = height + "px";
+            this.canvas.style.border = "solid 1px gray";
+
+            this.context = this.canvas.getContext("2d");
+            this.context.setTransform(ratio, 0, 0, ratio, 0, 0);
+
+            document.body.appendChild(this.canvas);
+        }
 
         drawBackdrop(): void {
             this.context.drawImage(

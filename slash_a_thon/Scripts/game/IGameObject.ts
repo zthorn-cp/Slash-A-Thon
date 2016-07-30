@@ -8,6 +8,9 @@
         sprite: Sprite;
         affinity: Element;
 
+        // events
+        onReady:(obj:IGameObject) => void;
+
         update(ticks: number): boolean;
         collideWith(other: IGameObject): boolean;
     }

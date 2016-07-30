@@ -12,16 +12,16 @@
         animationRate: number = 100;
         animationTrim: number = 0;
 
-        constructor(path: string = undefined) {
-            if (path !== undefined) {
-                this.load(path);
-            }
-        }
+        onReady: (sprite:Sprite) => void = (sprite:Sprite) => { };
 
-        load(path: string) {
-            this.image = document.createElement("img");
-            this.image.src = path;
-            this.path = path;
+       constructor(path: string) {
+           ImageLoader.instance.loadImage(
+               path,
+               (img: HTMLImageElement) => {
+                   this.image = img;
+                   this.onReady(this);
+               }
+           );
         }
 
         update(ticks: number): void {
